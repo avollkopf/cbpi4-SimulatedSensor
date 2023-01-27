@@ -22,6 +22,7 @@ class SimulatedSensor(CBPiSensor):
         super(SimulatedSensor, self).__init__(cbpi, id, props)
         self.value = float(self.props.get("StartTemp",20))
         self.running = True
+        self.actionvalue=None
         self.logger = logging.getLogger(__name__)
         self.actor = self.cbpi.actor.find_by_id(self.props.HeatingActor)
         self.cbpi.notify(title="DEVELOPMENT ONLY", message="The cbpi4-SimulatedSensor plugin should NOT be used in production!", type=NotificationType.WARNING)
@@ -31,8 +32,8 @@ class SimulatedSensor(CBPiSensor):
     async def settemp(self ,setTemp=20, **kwargs):
         self.temp = float(setTemp)
         clampedValue=clamp(self.temp, -20,230)
-        self.value=clampedValue
-        self.push_update(self.value)
+        self.actionvalue=clampedValue
+        #self.push_update(self.value)
 
     async def run(self):
         self.push_update(self.value)
@@ -41,6 +42,9 @@ class SimulatedSensor(CBPiSensor):
             Heater = self.cbpi.actor.find_by_id(self.props.HeatingActor)
             HeaterState=Heater.instance.state
             HeaterPower=float(Heater.power)/100
+            if self.actionvalue is not None:
+                self.value=self.actionvalue
+                self.actionvalue=None
             if HeaterState and HeaterPower > 0 :
                 potentialNewValue = round(float(self.value) + HeaterPower*float((self.props.HeatingRate)), 4)
             else:
