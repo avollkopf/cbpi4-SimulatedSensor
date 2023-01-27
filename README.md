@@ -15,5 +15,5 @@ this plugin can be installed via ´pip install cbpi4-SimulatedSensor´
 
 ### Changelog:
 
-- 27.01.23: (0.0.3) Added default Starttemp value to sensor config and added action to set sensor temp from dashboard 
+- 27.01.23: (0.0.3) Added default Starttemp value to sensor config and added action to set sensor temp from dashboard. Added Power dependent temp increase for PID logic simulation.
 

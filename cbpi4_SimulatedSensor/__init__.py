@@ -36,11 +36,13 @@ class SimulatedSensor(CBPiSensor):
 
     async def run(self):
         self.push_update(self.value)
+        potentialNewValue = self.value
         while self.running == True:
-            HeaterState = self.cbpi.actor.find_by_id(self.props.HeatingActor).instance.state
-            potentialNewValue = self.value
-            if HeaterState :
-                potentialNewValue = round(float(self.value) + float(self.props.HeatingRate), 4)
+            Heater = self.cbpi.actor.find_by_id(self.props.HeatingActor)
+            HeaterState=Heater.instance.state
+            HeaterPower=float(Heater.power)/100
+            if HeaterState and HeaterPower > 0 :
+                potentialNewValue = round(float(self.value) + HeaterPower*float((self.props.HeatingRate)), 4)
             else:
                 potentialNewValue = round(float(self.value) - float(self.props.CoolingRate), 4)
             clampedValue = clamp(potentialNewValue,-20,230)
