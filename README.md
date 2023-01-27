@@ -12,3 +12,8 @@ I use this to try and test specific functions in plugin development where i need
 
 this plugin can be installed via ´pip install cbpi4-SimulatedSensor´
 
+
+### Changelog:
+
+- 27.01.23: (0.0.3) Added default Starttemp value to sensor config and added action to set sensor temp from dashboard 
+
