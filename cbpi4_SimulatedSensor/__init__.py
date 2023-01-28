@@ -24,7 +24,10 @@ class SimulatedSensor(CBPiSensor):
         self.running = True
         self.actionvalue=None
         self.logger = logging.getLogger(__name__)
-        self.actor = self.cbpi.actor.find_by_id(self.props.HeatingActor)
+        self.actorid=self.props.HeatingActor
+        self.HeatingRate=float(self.props.get("HeatingRate",0.1))
+        self.CoolingRate=float(self.props.get("CoolingRate",0.01))
+
         self.cbpi.notify(title="DEVELOPMENT ONLY", message="The cbpi4-SimulatedSensor plugin should NOT be used in production!", type=NotificationType.WARNING)
         self.logger.warning("the plugin cbpi4-SimulatedSensor should not be installed in a production environment and should only be used in the dev container")
 
@@ -33,23 +36,35 @@ class SimulatedSensor(CBPiSensor):
         self.temp = float(setTemp)
         clampedValue=clamp(self.temp, -20,230)
         self.actionvalue=clampedValue
-        #self.push_update(self.value)
+        self.push_update(self.value)
+
+    async def get_actor_details(self):
+        HeaterState=self.HeatingActor.instance.state
+        HeaterPower=float(self.HeatingActor.power)/100
+        HeaterData={'state': HeaterState, 'power':HeaterPower}
+        return HeaterState, HeaterPower
 
     async def run(self):
         self.push_update(self.value)
         potentialNewValue = self.value
+        self.HeatingActor=self.cbpi.actor.find_by_id(self.actorid)
+        logging.info(self.HeatingActor)
         while self.running == True:
-            Heater = self.cbpi.actor.find_by_id(self.props.HeatingActor)
-            HeaterState=Heater.instance.state
-            HeaterPower=float(Heater.power)/100
+            HeaterState, HeaterPower = await self.get_actor_details()
+            #logging.warning(HeaterState)
+            #logging.warning(HeaterPower)
+
             if self.actionvalue is not None:
                 self.value=self.actionvalue
                 self.actionvalue=None
-            if HeaterState and HeaterPower > 0 :
-                potentialNewValue = round(float(self.value) + HeaterPower*float((self.props.HeatingRate)), 4)
+            if (HeaterState==True) and (HeaterPower > 0) :
+                logging.info("Heating")
+                potentialNewValue = round((float(self.value) + HeaterPower*self.HeatingRate), 8)
             else:
-                potentialNewValue = round(float(self.value) - float(self.props.CoolingRate), 4)
+                logging.info("Cooling")
+                potentialNewValue = round((float(self.value) - self.CoolingRate), 8)
             clampedValue = clamp(potentialNewValue,-20,230)
+            logging.info(clampedValue)
             if clampedValue != self.value :
                 self.value = round(clampedValue,3)
                 self.push_update(self.value)
