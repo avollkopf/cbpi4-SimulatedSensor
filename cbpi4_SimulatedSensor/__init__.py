@@ -39,8 +39,12 @@ class SimulatedSensor(CBPiSensor):
         self.push_update(self.value)
 
     async def get_actor_details(self):
-        HeaterState=self.HeatingActor.instance.state
-        HeaterPower=float(self.HeatingActor.power)/100
+        try:
+            HeaterState=self.HeatingActor.instance.state
+            HeaterPower=float(self.HeatingActor.power)/100
+        except:
+            HeaterState=False
+            HeaterPower = 0
         HeaterData={'state': HeaterState, 'power':HeaterPower}
         return HeaterState, HeaterPower
 
